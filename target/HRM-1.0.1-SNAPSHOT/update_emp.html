@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title>新员工添加页</title>
+		<link rel="stylesheet" type="text/css" href="css/bootstrap_min.css" />
+		<script src="js/JQuery.main.js" type="text/javascript" charset="utf-8"></script>
+	</head>
+
+	<body>
+		<h1>请输入新员工信息</h1>
+		<table class="table table-striped table-hover">
+			<tr>
+				<td>员工号</td>
+				<td id="empno"></td>
+			</tr>
+			<tr>
+				<td>员工名</td>
+				<td><input type="text" name="ename" id="ename"></td>
+			</tr>
+			<tr>
+				<td>职位</td>
+				<td><input type="text" name="job" id="job"></td>
+			</tr>
+			<tr>
+				<td>领导工号</td>
+				<td><input type="text" name="mgr" id="mgr"></td>
+			</tr>
+			<tr>
+				<td>入职日期</td>
+				<td><input type="date" name="hiredate" id="hiredate"></td>
+			</tr>
+			<tr>
+				<td>薪金</td>
+				<td id="sal"></td>
+			</tr>
+			<tr>
+				<td>奖金</td>
+				<td id="comm"></td>
+			</tr>
+			<tr>
+				<td>部门编号</td>
+				<td>
+					<select id="dept" name="deptno">
+						<option value="0">---请选择---</option>
+						<option value="10">accounting</option>
+						<option value="20">resharch</option>
+						<option value="30">sales</option>
+						<option value="40">operations</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td><button class="btn btn-primary" id="update">更新</button></td>
+				<td><button class="btn btn-primary" id="reset">重置</button></td>
+			</tr>
+		</table>
+	</body>
+	<script type="text/javascript">
+		$(function() {
+			var empno = location.search;
+			var index = empno.indexOf("=");
+			var eno = empno.substring(index + 1);
+			var emp = null;
+			$.ajax({
+				type: "get",
+				url: "http://localhost:8080/HRMP/EmpFindByIdServlet",
+				async: true,
+				data: {
+					"empno": eno
+				},
+				success: function(res) {
+					var emps = JSON.parse(res);
+					emp = emps.data[0];
+					$("#empno").html(emp.empno);
+					$("#ename").val(emp.ename);
+					$("#job").val(emp.job);
+					$("#mgr").val(emp.mgr);
+					$("#hiredate").val(emp.hiredate);
+					$("#sal").html(emp.sal);
+					$("#comm").html(emp.comm);
+					$("#dept").val(emp.deptno);
+				}
+			});
+			$("#update").click(function() {
+				$.ajax({
+					type: "get",
+					url: "http://localhost:8080/HRMP/EmpUpdateServlet",
+					async: true,
+					data: {
+						"empno": emp.empno,
+						"ename": $("#ename").val(),
+						"job": $("#job").val(),
+						"mgr": $("#mgr").val(),
+						"hiredate": $("#hiredate").val(),
+						"sal": emp.sal,
+						"comm": emp.comm,
+						"deptno": $("#dept").val()
+					},
+					success: function(res) {
+						var res = JSON.parse(res);
+						if(res.code == 200) {
+							window.location.href = "http://localhost:8080/HRMP/emp_main.html";
+						} else {
+							sessionStorage.errCode = res.code;
+							sessionStorage.errMsg = res.msg;
+							window.location.href = "http://localhost:8080/HRMP/error.html";
+						}
+					}
+				});
+			})
+			$("#reset").click(function() {
+				$("#ename").val(emp.ename);
+				$("#job").val(emp.job);
+				$("#mgr").val(emp.mgr);
+				$("#hiredate").val(emp.hiredate);
+				$("#dept").val(emp.deptno);
+			})
+		})
+	</script>
+
+</html>

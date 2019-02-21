@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title>登录页</title>
+		<link rel="stylesheet" type="text/css" href="css/bootstrap_min.css"/>
+	</head>
+
+	<body>
+		<h1>欢迎使用HRM系统</h1>
+			<table class="table table-striped table-hover">
+				<tr>
+					<td>用户名</td>
+					<td><input type="text" name="username" id="username" value="123"><span id="userExistMsg"></span></td>
+				</tr>
+				<tr>
+					<td>密码:</td>
+					<td><input type="password" name="password" value="123"></td>
+				</tr>
+				<tr>
+					<td><button id="loginBtn" class="btn btn-primary">登录</button></td>
+					<td>
+						<a class="btn" href="regist.html">注册</a>
+					</td>
+				</tr>
+			</table>
+
+		<script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+		<script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<script type="text/javascript">
+			$(function() {
+				//实现登录功能
+				$("#loginBtn").click(function(ev) {
+					$.ajax({
+						type:"post",
+						url:"http://localhost:8080/HRMP/UserLoginServlet",
+						data:{
+							"username":$("input[name='username']").val(),
+							"password":$("input[name='password']").val(),
+						},
+						async:true,
+						success:function(response){
+							var resultObj = JSON.parse(response);
+							if(resultObj.code == 200){
+								sessionStorage.username = resultObj.data.username;
+								window.location.href="http://localhost:8080/HRMP/emp_main.html";
+							}else{
+								sessionStorage.errCode = resultObj.code;
+								sessionStorage.errMsg = resultObj.msg;
+								window.location.href="http://localhost:8080/HRMP/error.html";
+							}
+							return false;
+						}
+					});
+				});
+				//实现用户名是否存在验证功能
+				$("#username").focus().blur(function(ev) {
+					$.ajax({
+						type: "get",
+						url: "http://localhost:8080/HRMP/UserExistServlet",
+						data: {
+							"username": $(ev.target).val()
+						},
+						async: true,
+						success: function(res) {
+							//将ajax异步请求的字符串转成json对象
+							var jsonResult = JSON.parse(res);
+							if(jsonResult.code == 200) {
+								$("#userExistMsg").html("用户名存在").css({
+									"color": "green"
+								});
+							} else {
+								$("#userExistMsg").html(jsonResult.code + ":" + jsonResult.msg).css("color", "red");
+							}
+						}
+					});
+				});
+			});
+		</script>
+	</body>
+
+</html>

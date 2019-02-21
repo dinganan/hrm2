@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html ng-app="empApp">
+
+	<head>
+		<meta charset="utf-8">
+		<title>员工列表页</title>
+		<link rel="stylesheet" type="text/css" href="css/bootstrap_min.css" />
+		<script src="js/JQuery.main.js" type="text/javascript" charset="utf-8"></script>
+		<style type="text/css">
+			li {
+				list-style: none;
+			}
+			
+			span {
+				padding-right: 20px;
+			}
+		</style>
+	</head>
+
+	<body ng-controller="empCtrl">
+		<h1>欢迎{{username}}!</h1>
+		<ul>
+			<li ng-repeat="emp in emps">
+				<span id="e_no">员工编号：{{emp.empno}}</span>
+				<span id="e_name">员工姓名：{{emp.ename}}</span>
+				<span id="e_sal">员工工资：{{emp.sal}}</span>
+				<span id="e_comm">员工奖金：{{emp.comm}}</span>
+				<span id="e_hiredate">入职日期：{{emp.hiredate}}</span>
+				<button class="update" value={{emp.empno}}>更新</button>
+				<button class="delbtn" value={{emp.empno}}>删除</button>
+				<hr />
+			</li>
+		</ul>
+		<hr/>
+		<a href="new_emp.html">添加新员工</a>
+		<hr/>
+
+		<select id="query">
+			<option value="0">---请选择---</option>
+			<option value="empno">员工编号</option>
+			<option value="ename">员工姓名（模糊查询）</option>
+		</select>
+		<input type="text" ng-model="queryCon" id="typemsg">
+		<button id="queryBtn">查询</button>
+
+		<script src="https://cdn.bootcss.com/angular.js/1.7.5/angular.min.js"></script>
+		<script src="https://cdn.bootcss.com/angular.js/1.7.5/angular-route.min.js"></script>
+		<script type="text/javascript">
+			var querytype = "empno";
+			var app = angular.module("empApp", ['ngRoute']);
+			app.config(['$routeProvider', function($routeProvider) {
+
+			}]);
+			app.controller("empCtrl", ['$scope', '$http', function($scope, $http) {
+				$scope.username = sessionStorage.username;
+				$http.get("http://localhost:8080/HRMP/EmpFindAllServlet").then(function(res) {
+					console.log(res);
+					for(d of res.data.data) {
+						if(d.comm == null) {
+							d.comm = 0;
+						}
+					}
+					$scope.emps = res.data.data;
+					$(function() {
+						$(".update").click(function() {
+							window.location.href = "http://localhost:8080/HRMP/update_emp.html?empno=" + $(this).val();
+						})
+						$(".delbtn").click(function() {
+							$(this).parent().remove();
+							$.ajax({
+								type: "get",
+								url: "http://localhost:8080/HRMP/EmpDeleteServlet",
+								async: true,
+								data: {
+									"empno": $(this).val()
+								}
+							});
+						})
+					})
+				}, function(err) {
+					sessionStorage.errCode = "404";
+					sessionStorage.errMsg = "findall error!";
+					window.location.href = "http://localhost:8080/HRMP/error.html";
+				}); //promise
+			}]);
+			$("#query").change(function() {
+				querytype = $(this).val();
+			})
+			$("#queryBtn").click(function() {
+				if(querytype == "empno") {
+					$.ajax({
+						type: "get",
+						url: "http://localhost:8080/HRMP/EmpFindByIdServlet",
+						async: true,
+						data: {
+							"empno": $("#typemsg").val()
+						},
+						success: function(res) {
+							var emps = JSON.parse(res);
+							var emp = emps.data[0];
+							$("li").remove();
+							$_li = $("<li></li>")
+							$_span1 = $("<span>员工编号：" + emp.empno + "</span>");
+							$_span2 = $("<span>员工姓名：" + emp.ename + "</span>");
+							$_span3 = $("<span>员工工资：" + emp.sal + "</span>");
+							$_span4 = $("<span>员工奖金：" + emp.comm + "</span>");
+							$_span5 = $("<span>入职日期：" + emp.hiredate + "</span>");
+							$_btn1 = $("<button class='update' value=emp.empno>更新</button>");
+							$_btn2 = $("<button class='delbtn' value=emp.empno>删除</button>");
+							$_li.append($_span1);
+							$_li.append($_span2);
+							$_li.append($_span3);
+							$_li.append($_span4);
+							$_li.append($_span5);
+							$_li.append($_btn1);
+							$_li.append($_btn2);
+							$("ul").append($_li)
+						}
+					});
+				} else if(querytype == "ename") {
+					$.ajax({
+						type: "get",
+						url: "http://localhost:8080/HRMP/EmpFindByNameServlet",
+						async: true,
+						data: {
+							"ename": $("#typemsg").val()
+						},
+						success: function(res) {
+							var emps = JSON.parse(res);
+							var emp = emps.data;
+							$("li").remove();
+							for(var i = 0; i < emps.data.length; i++) {
+								$_li = $("<li></li>")
+								$_span1 = $("<span>员工编号：" + emp[i].empno + "</span>");
+								$_span2 = $("<span>员工姓名：" + emp[i].ename + "</span>");
+								$_span3 = $("<span>员工工资：" + emp[i].sal + "</span>");
+								$_span4 = $("<span>员工奖金：" + emp[i].comm + "</span>");
+								$_span5 = $("<span>入职日期：" + emp[i].hiredate + "</span>");
+								$_btn1 = $("<button class='update' value=emp.empno>更新</button>");
+								$_btn2 = $("<button class='delbtn' value=emp.empno>删除</button>");
+								$_li.append($_span1);
+								$_li.append($_span2);
+								$_li.append($_span3);
+								$_li.append($_span4);
+								$_li.append($_span5);
+								$_li.append($_btn1);
+								$_li.append($_btn2);
+								$("ul").append($_li)
+							}
+						}
+					});
+				}
+			})
+		</script>
+	</body>
+
+</html>
